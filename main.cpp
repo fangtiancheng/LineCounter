@@ -42,7 +42,9 @@ protected:
     inline static std::set<std::string> gPostfixes{
         ".c", ".h",
         ".cpp", ".cc", ".cxx", ".hpp", ".ii", ".ixx", ".ipp", ".txx", ".tpp", ".tpl",
-        ".py", ".pyw", ".pyx"
+        ".py", ".pyw", ".pyx",
+        ".sh", ".bash",
+        ".java",
     };
 
     fs::path mScanDir;
