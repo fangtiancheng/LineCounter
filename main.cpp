@@ -30,30 +30,41 @@ class LineCounter{
         return gPostfixes.find(fileName.extension().string()) != gPostfixes.cend();
     }
 
+    static bool isIgnoredDir(const fs::path& dirName){
+        return gIgnoredDirs.find(dirName.filename().string()) != gIgnoredDirs.cend();
+    }
+
 protected:
     inline static bool gWarninged = false;
+    inline static std::set<std::string> gIgnoredDirs{
+        "cmake-build-debug", "cmake-build-release", "3rdparty", "build", ".git", "outputs", "thirdparty", ".idea"
+    };
     inline static std::set<std::string> gPostfixes{
         ".c", ".h",
         ".cpp", ".cc", ".cxx", ".hpp", ".ii", ".ixx", ".ipp", ".txx", ".tpp", ".tpl",
         ".py", ".pyw", ".pyx"
     };
+
     fs::path mScanDir;
     std::vector<LineCounter> mSubCounters{};
     std::map<fs::path, size_t> mFiles;
     size_t mMaxDepth;
-    void privatePrint(const std::string& prefix) const {
+    void privatePrint() const {
         for(const auto& mFile: mFiles){
-            std::cout << prefix << "|-- " << mFile.first << " " << mFile.second << '\n';
+            std::cout << mFile.first << " " << mFile.second << '\n';
         }
         for(const auto& mCounter: mSubCounters){
-            mCounter.privatePrint("| ");
+            mCounter.privatePrint();
         }
     }
+
 public:
     LineCounter(fs::path scanDir, size_t maxDepth): mScanDir(std::move(scanDir)), mMaxDepth(maxDepth){
         for(auto& currentPath: fs::directory_iterator(mScanDir)){
             if(currentPath.is_directory()){
-                if(mMaxDepth > 0) {
+                if(isIgnoredDir(currentPath)){
+                    std::cerr << "[WARNING] find " << currentPath << ", ignored\n";
+                } else if(mMaxDepth > 0) {
                     mSubCounters.emplace_back(currentPath, mMaxDepth - 1);
                 } else {
                     if(!gWarninged){
@@ -89,7 +100,7 @@ public:
     }
 
     void print() const {
-        privatePrint("");
+        privatePrint();
         std::cout << "total " << countFiles() << " files, " << countLines() << " lines" << std::endl;
     }
 };
